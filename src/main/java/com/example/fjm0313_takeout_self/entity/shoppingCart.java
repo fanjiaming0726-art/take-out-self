@@ -4,40 +4,33 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.Data;
 import org.springframework.cglib.core.Local;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class AddressBook implements Serializable {
+public class shoppingCart implements Serializable {
     private static final Long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
-    private long id;
+    private Long id;
 
     private Long userId;
 
-    private String consignee;
+    private Long dishId;
 
-    private String phone;
+    private String name;
 
-    private Integer sex;
+    private String image;
 
-    private String ProvinceName;
+    private Integer number;
 
-    private String cityName;
-
-    private String districtName;
-
-    private String detail;
-
-    private Integer IsDefault;
+    private BigDecimal amount;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime currentTime;
-
-    @TableField(fill = FieldFill.UPDATE)
-    private LocalDateTime updateTime;
+    private LocalDateTime createTime;
 }

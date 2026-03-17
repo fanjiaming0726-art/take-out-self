@@ -5,39 +5,38 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
-import org.springframework.cglib.core.Local;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class AddressBook implements Serializable {
+public class OrderDetail implements Serializable {
     private static final Long serialVersionUID = 1L;
 
+    // id是为了与同类型的数据进行区分
     @TableId(type = IdType.AUTO)
-    private long id;
+    private Long id;
 
-    private Long userId;
+    // orderId是为了与order绑定
+    private Long OrderId;
 
-    private String consignee;
+    private String name;
 
-    private String phone;
+    private String image;
 
-    private Integer sex;
+    // 便于拉取菜名
+    private Long dishId;
 
-    private String ProvinceName;
+    private BigDecimal amount;
 
-    private String cityName;
+    private Integer number;
 
-    private String districtName;
-
-    private String detail;
-
-    private Integer IsDefault;
 
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime currentTime;
+    private LocalDateTime createTime;
 
     @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
+
 }
