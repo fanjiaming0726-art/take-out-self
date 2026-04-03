@@ -35,7 +35,6 @@ public class User implements Serializable {
     private LocalDateTime updateTime;
 
 
-
-
-
+    public static class DishUserTips {
+    }
 }

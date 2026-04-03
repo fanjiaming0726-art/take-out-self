@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/orders")
@@ -23,7 +22,7 @@ public class OrdersController {
     private OrdersService ordersService;
 
     @Autowired
-    private shoppingCartService cartService;
+    private ShoppingCartService cartService;
 
     @Autowired
     private AddressBookService addressService;
@@ -35,10 +34,10 @@ public class OrdersController {
     @PostMapping("/submit")
     public Result<Orders> submit(@RequestBody Orders orders, HttpServletRequest request){
         // 查有无购物车
-        Long id = (Long) request.getSession().getAttribute("userId");
-        LambdaQueryWrapper<shoppingCart> cartWrapper = new LambdaQueryWrapper<>();
-        cartWrapper.eq(shoppingCart::getUserId,id);
-        List<shoppingCart> cartList = cartService.list(cartWrapper);
+        Long userId = (Long) request.getSession().getAttribute("userId");
+        LambdaQueryWrapper<ShoppingCart> cartWrapper = new LambdaQueryWrapper<>();
+        cartWrapper.eq(ShoppingCart::getUserId,userId);
+        List<ShoppingCart> cartList = cartService.list(cartWrapper);
 
         if(cartList == null || cartList.isEmpty()){
             return Result.fail("用户未下单");
@@ -46,7 +45,7 @@ public class OrdersController {
 
         // 查有无地址
         LambdaQueryWrapper<AddressBook> addressWrapper = new LambdaQueryWrapper<>();
-        addressWrapper.eq(AddressBook::getUserId,id);
+        addressWrapper.eq(AddressBook::getUserId,userId);
 
         AddressBook addressBook = addressService.getById(orders.getAddressBookId());
         if(addressBook == null){
@@ -54,7 +53,7 @@ public class OrdersController {
         }
 
         // 查用户
-        User user = userService.getById("userId");
+        User user = userService.getById(userId);
 
         // 生成订单号
         String orderNumber = UUID.randomUUID().toString().replace("-","");
@@ -62,14 +61,14 @@ public class OrdersController {
 
         // 计算金额
         BigDecimal amountAll = BigDecimal.ZERO ;
-        for(shoppingCart cart : cartList){
+        for(ShoppingCart cart : cartList){
             amountAll = amountAll.add(cart.getAmount().multiply(new BigDecimal(cart.getNumber())));
         }
         orders.setNumber(orderNumber);
         orders.setStatus(1);
         orders.setConsignee(addressBook.getConsignee());
         orders.setUsername(user.getUsername());
-        orders.setUserId(id);
+        orders.setUserId(userId);
         orders.setAmount(amountAll);
         String fullAddress = (addressBook.getProvinceName()== null ? "" : addressBook.getProvinceName())
                         + (addressBook.getCityName()== null ? "" : addressBook.getCityName())
@@ -89,6 +88,8 @@ public class OrdersController {
             orderDetail.setDishId(cart.getDishId());
             orderDetail.setNumber(cart.getNumber());
             orderDetail.setAmount(cart.getAmount());
+            orderDetail.setFlavor(cart.getFlavor());
+            orderDetail.setPortion(cart.getPortion());
             return orderDetail;
         }).toList();
         orderDetailService.saveBatch(details);
@@ -104,6 +105,7 @@ public class OrdersController {
         LambdaQueryWrapper<Orders> ordersWrapper = new LambdaQueryWrapper<>();
         ordersWrapper.eq(Orders::getUserId,id);
         ordersWrapper.orderByDesc(Orders::getCreateTime);
+
 
         List<Orders> ordersList = ordersService.list(ordersWrapper);
         List<OrdersDto> ordersDtoList = ordersList.stream().map( order -> {

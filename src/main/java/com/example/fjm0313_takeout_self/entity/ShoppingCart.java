@@ -1,9 +1,6 @@
 package com.example.fjm0313_takeout_self.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.Data;
 import org.springframework.cglib.core.Local;
@@ -13,7 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-public class shoppingCart implements Serializable {
+@TableName("shopping_cart")
+public class ShoppingCart implements Serializable {
     private static final Long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)
@@ -30,6 +28,10 @@ public class shoppingCart implements Serializable {
     private Integer number;
 
     private BigDecimal amount;
+
+    private String flavor;
+
+    private String portion;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

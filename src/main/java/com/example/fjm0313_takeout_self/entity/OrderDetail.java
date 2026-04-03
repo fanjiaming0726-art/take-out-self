@@ -19,7 +19,7 @@ public class OrderDetail implements Serializable {
     private Long id;
 
     // orderId是为了与order绑定
-    private Long OrderId;
+    private Long orderId;
 
     private String name;
 
@@ -32,11 +32,12 @@ public class OrderDetail implements Serializable {
 
     private Integer number;
 
+    // 客户的口味
+    private String flavor;
 
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    // 客户的份量
+    private String portion;
 
-    @TableField(fill = FieldFill.UPDATE)
-    private LocalDateTime updateTime;
+
 
 }

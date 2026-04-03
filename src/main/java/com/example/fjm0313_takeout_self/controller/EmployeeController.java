@@ -52,7 +52,7 @@ public class EmployeeController {
 
         // 说白了就是，登录成功后，服务端创建session(locker#ABC123,内部存储userid=1)，设置并返回cookie（JSESSIONID=ABC123），然后等张三来查的时候，通过cookie查到张三的id，然后拿着这个id去数据库查数据
         // getSession()操作就是服务端创建session，返回cookie的，是服务端自动完成的，
-        request.getSession().setAttribute("employeeId",employee.getId());
+        request.getSession().setAttribute("employeeId",dbEmployee.getId());
 
         // 为什么要设置密码为null，不怕数据库里的密码也被设置成null了吗：
         // 不怕，因为这是一个副本，修改的只是Java对象

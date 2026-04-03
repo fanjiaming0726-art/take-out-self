@@ -41,6 +41,7 @@ public class Result<T> implements Serializable {
         result.msg = msg;
 
         return result;
+
     }
 
 }

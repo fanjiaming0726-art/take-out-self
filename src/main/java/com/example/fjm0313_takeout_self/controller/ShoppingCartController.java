@@ -2,32 +2,34 @@ package com.example.fjm0313_takeout_self.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.fjm0313_takeout_self.common.Result;
-import com.example.fjm0313_takeout_self.entity.shoppingCart;
-import com.example.fjm0313_takeout_self.service.shoppingCartService;
+import com.example.fjm0313_takeout_self.entity.ShoppingCart;
+import com.example.fjm0313_takeout_self.service.ShoppingCartService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/shoppingCart")
-public class shoppingCartController {
+@RequestMapping("/ShoppingCart")
+public class ShoppingCartController {
 
     @Autowired
-    private shoppingCartService cartService;
+    private ShoppingCartService cartService;
 
     // 添加
     @PostMapping("/add")
-    public Result<shoppingCart> add(@RequestBody shoppingCart cart, HttpServletRequest request){
+    public Result<ShoppingCart> add(@RequestBody ShoppingCart cart, HttpServletRequest request){
         // 找出用户的订单，找有没有这道菜，有就把数量＋1，没有就新加
-        Long id = (Long) request.getSession().getAttribute("userId");
-        cart.setUserId(id);
+        Long userId = (Long) request.getSession().getAttribute("userId");
+        cart.setUserId(userId);
 
-        LambdaQueryWrapper<shoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(shoppingCart::getId,id);
-        wrapper.eq(shoppingCart::getDishId,cart.getDishId());
+        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShoppingCart::getUserId,userId);
+        wrapper.eq(ShoppingCart::getDishId,cart.getDishId());
+        wrapper.eq(ShoppingCart::getFlavor,cart.getFlavor());
+        wrapper.eq(ShoppingCart::getPortion,cart.getPortion());
 
-        shoppingCart existCart = cartService.getOne(wrapper);
+        ShoppingCart existCart = cartService.getOne(wrapper);
 
         if(existCart != null){
             existCart.setNumber(existCart.getNumber() + 1);
@@ -41,12 +43,15 @@ public class shoppingCartController {
     }
 
     @PostMapping("/sub")
-    public Result<shoppingCart> sub(@RequestBody shoppingCart cart , HttpServletRequest request){
+    public Result<ShoppingCart> sub(@RequestBody ShoppingCart cart , HttpServletRequest request){
         Long id = (Long) request.getSession().getAttribute("userId");
-        LambdaQueryWrapper<shoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(shoppingCart::getUserId,id);
+        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShoppingCart::getUserId,id);
+        wrapper.eq(ShoppingCart::getDishId,cart.getDishId());
+        wrapper.eq(ShoppingCart::getFlavor,cart.getFlavor());
+        wrapper.eq(ShoppingCart::getPortion,cart.getPortion());
 
-        shoppingCart existCart = cartService.getOne(wrapper);
+        ShoppingCart existCart = cartService.getOne(wrapper);
         if(existCart == null){
             return Result.fail("购物单不存在");
 
@@ -66,13 +71,13 @@ public class shoppingCartController {
     }
 
     @GetMapping("/list")
-    public Result<List<shoppingCart>> list(HttpServletRequest request){
+    public Result<List<ShoppingCart>> list(HttpServletRequest request){
         Long id = (Long) request.getSession().getAttribute("userId");
-        LambdaQueryWrapper<shoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(shoppingCart::getUserId,id);
-        wrapper.orderByDesc(shoppingCart::getCreateTime);
+        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShoppingCart::getUserId,id);
+        wrapper.orderByDesc(ShoppingCart::getCreateTime);
 
-        List<shoppingCart> list = cartService.list(wrapper);
+        List<ShoppingCart> list = cartService.list(wrapper);
 
         return Result.success(list);
     }
@@ -80,8 +85,8 @@ public class shoppingCartController {
     @DeleteMapping("/clean")
     public Result<String> clean(HttpServletRequest request){
         Long id = (Long) request.getSession().getAttribute("userId");
-        LambdaQueryWrapper<shoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(shoppingCart::getUserId,id);
+        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShoppingCart::getUserId,id);
 
         cartService.remove(wrapper);
 

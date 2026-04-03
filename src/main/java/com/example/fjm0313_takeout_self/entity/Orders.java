@@ -17,6 +17,7 @@ public class Orders implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    @TableField("user_name")
     private String username;
 
     private Long userId;
@@ -35,7 +36,6 @@ public class Orders implements Serializable {
 
     private String phone;
 
-    private Integer sex;
 
     // 订单状态I（0 未支付/1 已支付）
     private Integer status;
@@ -50,7 +50,7 @@ public class Orders implements Serializable {
 
     // 不插入数据库
     @TableField(exist = false)
-    private Long AddressBookId;
+    private Long addressBookId;
 
 
 }
