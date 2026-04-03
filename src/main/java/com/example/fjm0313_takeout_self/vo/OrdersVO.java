@@ -1,4 +1,4 @@
-package com.example.fjm0313_takeout_self.dto;
+package com.example.fjm0313_takeout_self.vo;
 
 import com.example.fjm0313_takeout_self.entity.OrderDetail;
 import com.example.fjm0313_takeout_self.entity.Orders;
@@ -8,6 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class OrdersDto extends Orders {
+public class OrdersVO extends Orders {
     private List<OrderDetail> orderDetails = new ArrayList<>();
 }

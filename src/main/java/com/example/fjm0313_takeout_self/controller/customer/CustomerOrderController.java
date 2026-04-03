@@ -1,8 +1,8 @@
-package com.example.fjm0313_takeout_self.controller;
+package com.example.fjm0313_takeout_self.controller.customer;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.fjm0313_takeout_self.common.Result;
-import com.example.fjm0313_takeout_self.dto.OrdersDto;
+import com.example.fjm0313_takeout_self.vo.OrdersVO;
 import com.example.fjm0313_takeout_self.entity.*;
 import com.example.fjm0313_takeout_self.service.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/orders")
-public class OrdersController {
+@RequestMapping("customer/orders")
+public class CustomerOrderController {
 
     @Autowired
     private OrdersService ordersService;
@@ -34,10 +34,8 @@ public class OrdersController {
     @PostMapping("/submit")
     public Result<Orders> submit(@RequestBody Orders orders, HttpServletRequest request){
         // 查有无购物车
-        Long userId = (Long) request.getSession().getAttribute("userId");
-        LambdaQueryWrapper<ShoppingCart> cartWrapper = new LambdaQueryWrapper<>();
-        cartWrapper.eq(ShoppingCart::getUserId,userId);
-        List<ShoppingCart> cartList = cartService.list(cartWrapper);
+        Long userId = getUserId(request);
+        List<ShoppingCart> cartList = cartService.findByUserId(userId);
 
         if(cartList == null || cartList.isEmpty()){
             return Result.fail("用户未下单");
@@ -47,13 +45,13 @@ public class OrdersController {
         LambdaQueryWrapper<AddressBook> addressWrapper = new LambdaQueryWrapper<>();
         addressWrapper.eq(AddressBook::getUserId,userId);
 
-        AddressBook addressBook = addressService.getById(orders.getAddressBookId());
+        AddressBook addressBook = addressService.findById(orders.getAddressBookId());
         if(addressBook == null){
             return Result.fail("地址信息有误，请重新填写");
         }
 
         // 查用户
-        User user = userService.getById(userId);
+        User user = userService.findById(userId);
 
         // 生成订单号
         String orderNumber = UUID.randomUUID().toString().replace("-","");
@@ -77,7 +75,7 @@ public class OrdersController {
         ;
         orders.setAddress(fullAddress);
 
-        ordersService.save(orders);
+        ordersService.createOrder(orders);
 
         // 8. 保存订单明细
         List<OrderDetail> details = cartList.stream().map( cart -> {
@@ -92,58 +90,32 @@ public class OrdersController {
             orderDetail.setPortion(cart.getPortion());
             return orderDetail;
         }).toList();
-        orderDetailService.saveBatch(details);
+        orderDetailService.saveOrderDetails(details);
 
-        cartService.remove(cartWrapper);
+        cartService.clearByUserId(userId);
 
         return Result.success(orders);
     }
 
     @GetMapping("/userOrderList")
-    public Result<List<OrdersDto>> userOrdersList(HttpServletRequest request){
-        Long id = (Long) request.getSession().getAttribute("userId");
-        LambdaQueryWrapper<Orders> ordersWrapper = new LambdaQueryWrapper<>();
-        ordersWrapper.eq(Orders::getUserId,id);
-        ordersWrapper.orderByDesc(Orders::getCreateTime);
+    public Result<List<OrdersVO>> userOrdersList(HttpServletRequest request){
+        Long userId = getUserId(request);
 
-
-        List<Orders> ordersList = ordersService.list(ordersWrapper);
-        List<OrdersDto> ordersDtoList = ordersList.stream().map( order -> {
-            OrdersDto orderDto = new OrdersDto();
-            BeanUtils.copyProperties(order,orderDto);
-            LambdaQueryWrapper<OrderDetail> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(OrderDetail::getOrderId,order.getId());
-            List<OrderDetail> orderDetails = orderDetailService.list(queryWrapper);
-            orderDto.setOrderDetails(orderDetails);
-            return orderDto;
+        List<Orders> ordersList = ordersService.findByUserId(userId);
+        List<OrdersVO> ordersVOList = ordersList.stream().map(order -> {
+            OrdersVO ordersVO = new OrdersVO();
+            BeanUtils.copyProperties(order,ordersVO);
+            List<OrderDetail> orderDetails = orderDetailService.findByOrderId(order.getId());
+            ordersVO.setOrderDetails(orderDetails);
+            return ordersVO;
         }).toList();
 
-        return Result.success(ordersDtoList);
+        return Result.success(ordersVOList);
     }
 
-    @GetMapping("/sellerList")
-    public Result<List<OrdersDto>> sellerList(@RequestParam(required = false) Integer status ){
-        LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
-        if(status != null){
-            queryWrapper.eq(Orders::getStatus,status);
-        }
-        queryWrapper.orderByDesc(Orders::getCreateTime);
-        List<Orders> ordersList = ordersService.list(queryWrapper);
 
-        List<OrdersDto> dtoList = ordersList.stream().map(order ->{
-            OrdersDto dto = new OrdersDto();
-            BeanUtils.copyProperties(order,dto);
-            LambdaQueryWrapper<OrderDetail> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(OrderDetail::getOrderId,order.getId());
-            List<OrderDetail> detailList = orderDetailService.list(wrapper);
-            dto.setOrderDetails(detailList);
-            return dto;
-
-        }).toList();
-
-        return Result.success(dtoList);
-
+    private Long getUserId(HttpServletRequest request){
+        return (Long) request.getSession().getAttribute("userId");
     }
-
 
 }

@@ -1,9 +1,12 @@
 package com.example.fjm0313_takeout_self.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.fjm0313_takeout_self.entity.Orders;
 
-import java.util.stream.IntStream;
+import java.util.List;
 
-public interface OrdersService extends IService<Orders> {
+public interface OrdersService {
+    void createOrder(Orders orders);
+    List<Orders> findByUserId(Long userId);
+    List<Orders> findAll(Integer status);
 }

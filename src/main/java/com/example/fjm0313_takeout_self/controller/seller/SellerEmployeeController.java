@@ -1,14 +1,11 @@
-package com.example.fjm0313_takeout_self.controller;
+package com.example.fjm0313_takeout_self.controller.seller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.fjm0313_takeout_self.common.Result;
 import com.example.fjm0313_takeout_self.entity.Employee;
 import com.example.fjm0313_takeout_self.service.EmployeeService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 // 如果不是RestController而是Controller的话，会把返回的Result当页面来处理，但是Result本身并不是html文件，而变成@RestController后就可以将Result自动转成json数据传回去
 @RestController
-@RequestMapping("/employee")
-public class EmployeeController {
+@RequestMapping("/seller/employee")
+public class SellerEmployeeController {
 
     @Autowired
     private EmployeeService employeeService;
@@ -28,9 +25,7 @@ public class EmployeeController {
     @PostMapping("/login")
     public Result<Employee> login(@RequestBody Employee employee, HttpServletRequest request){
 
-        LambdaQueryWrapper<Employee> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Employee::getUsername,employee.getUsername());
-        Employee dbEmployee = employeeService.getOne(queryWrapper);
+        Employee dbEmployee = employeeService.findByUsername(employee.getUsername());
 
 
         String md5Password = DigestUtils.md5DigestAsHex(employee.getPassword().getBytes());
@@ -72,17 +67,20 @@ public class EmployeeController {
     // 获取当前员工信息
     @PostMapping("/current")
     public Result<Employee> currentEmployee(HttpServletRequest request){
-        Long id = (Long) request.getSession().getAttribute("employeeId");
+        Long userId = getEmployeeId(request);
 
-        if(id == null){
+        if(userId == null){
             return Result.fail("未登录");
         }
-        Employee employee = employeeService.getById(id);
+        Employee employee = employeeService.findById(userId);
 
         if(employee != null){
             employee.setPassword(null);
         }
         return Result.success(employee);
 
+    }
+    private Long getEmployeeId(HttpServletRequest request){
+        return (Long) request.getSession().getAttribute("employeeId");
     }
 }

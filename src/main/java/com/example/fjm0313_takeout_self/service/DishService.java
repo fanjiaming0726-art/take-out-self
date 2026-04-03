@@ -1,8 +1,13 @@
 package com.example.fjm0313_takeout_self.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.fjm0313_takeout_self.entity.Dish;
 
+import java.util.List;
 
-public interface DishService extends IService<Dish> {
+public interface DishService {
+    void addDish(Dish dish);
+    void deleteDishByIds(List<Long> ids);
+    List<Dish> findAll();
+    Dish findById(Long id);
+    void updateDish(Dish dish);
 }

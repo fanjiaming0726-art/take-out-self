@@ -1,6 +1,6 @@
-package com.example.fjm0313_takeout_self.controller;
+package com.example.fjm0313_takeout_self.controller.customer;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
 import com.example.fjm0313_takeout_self.common.Result;
 import com.example.fjm0313_takeout_self.entity.User;
 import com.example.fjm0313_takeout_self.service.UserService;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/user")
-public class UserController {
+@RequestMapping("/costumer/user")
+public class CustomerUserController  {
 
     @Autowired
     private UserService userService;
@@ -24,10 +24,9 @@ public class UserController {
         // 查重名
         String username = user.getUsername();
 
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getUsername,username);
 
-        User existUser = userService.getOne(queryWrapper);
+
+        User existUser = userService.findByUsername(username);
 
         if(existUser != null){
             return Result.fail("用户名已被占用，请更换！");
@@ -41,7 +40,7 @@ public class UserController {
         user.setStatus(1);
         // 插入数据库
 
-        userService.save(user);
+        userService.register(user);
 
         return Result.success("用户注册成功！");
     }
@@ -51,10 +50,7 @@ public class UserController {
     public Result<User> login(@RequestBody User user, HttpServletRequest request){
         String username = user.getUsername();
 
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getUsername,username);
-
-        User exitUser = userService.getOne(queryWrapper);
+        User exitUser = userService.findByUsername(username);
         if(exitUser == null){
             return Result.fail("用户名错误");
         }
@@ -83,15 +79,18 @@ public class UserController {
 
     @PostMapping("/current")
     public Result<User> currentUser(HttpServletRequest request){
-        Long id = (Long) request.getSession().getAttribute("userId");
-        if(id == null){
+        Long userId = getUserId(request);
+        if(userId == null){
             return Result.fail("用户未登录");
         }
-        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(User::getId,id);
 
-        User user = userService.getOne(queryWrapper);
+        User user = userService.findById(userId);
         user.setPassword(null);
         return Result.success(user);
+    }
+
+
+    private Long getUserId(HttpServletRequest request){
+        return (Long) request.getSession().getAttribute("userId");
     }
 }
