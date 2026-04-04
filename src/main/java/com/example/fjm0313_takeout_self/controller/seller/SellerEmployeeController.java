@@ -1,7 +1,9 @@
 package com.example.fjm0313_takeout_self.controller.seller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.fjm0313_takeout_self.common.LoginRequired;
 import com.example.fjm0313_takeout_self.common.Result;
+import com.example.fjm0313_takeout_self.common.UserContext;
 import com.example.fjm0313_takeout_self.entity.Employee;
 import com.example.fjm0313_takeout_self.service.EmployeeService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -58,6 +60,7 @@ public class SellerEmployeeController {
     }
 
     // 登出
+    @LoginRequired("EMPLOYEE")
     @PostMapping("/logout")
     public Result<String> logout(HttpServletRequest request){
         request.getSession().removeAttribute("employeeId");
@@ -65,14 +68,11 @@ public class SellerEmployeeController {
     }
 
     // 获取当前员工信息
+    @LoginRequired("EMPLOYEE")
     @PostMapping("/current")
-    public Result<Employee> currentEmployee(HttpServletRequest request){
-        Long userId = getEmployeeId(request);
-
-        if(userId == null){
-            return Result.fail("未登录");
-        }
-        Employee employee = employeeService.findById(userId);
+    public Result<Employee> currentEmployee(){
+        Long employeeId = UserContext.getEmployeeId();
+        Employee employee = employeeService.findById(employeeId);
 
         if(employee != null){
             employee.setPassword(null);
@@ -80,7 +80,5 @@ public class SellerEmployeeController {
         return Result.success(employee);
 
     }
-    private Long getEmployeeId(HttpServletRequest request){
-        return (Long) request.getSession().getAttribute("employeeId");
-    }
+
 }

@@ -1,7 +1,9 @@
 package com.example.fjm0313_takeout_self.controller.customer;
 
 
+import com.example.fjm0313_takeout_self.common.LoginRequired;
 import com.example.fjm0313_takeout_self.common.Result;
+import com.example.fjm0313_takeout_self.common.UserContext;
 import com.example.fjm0313_takeout_self.entity.User;
 import com.example.fjm0313_takeout_self.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,7 +51,6 @@ public class CustomerUserController  {
     @PostMapping("/login")
     public Result<User> login(@RequestBody User user, HttpServletRequest request){
         String username = user.getUsername();
-
         User exitUser = userService.findByUsername(username);
         if(exitUser == null){
             return Result.fail("用户名错误");
@@ -70,6 +71,7 @@ public class CustomerUserController  {
 
     }
 
+    @LoginRequired("CUSTOMER")
     @PostMapping("/logout")
     public Result<String> logout(HttpServletRequest request){
         request.getSession().removeAttribute("userId");
@@ -77,12 +79,10 @@ public class CustomerUserController  {
 
     }
 
+    @LoginRequired("CUSTOMER")
     @PostMapping("/current")
-    public Result<User> currentUser(HttpServletRequest request){
-        Long userId = getUserId(request);
-        if(userId == null){
-            return Result.fail("用户未登录");
-        }
+    public Result<User> currentUser(){
+        Long userId = UserContext.getUserId();
 
         User user = userService.findById(userId);
         user.setPassword(null);
@@ -90,7 +90,5 @@ public class CustomerUserController  {
     }
 
 
-    private Long getUserId(HttpServletRequest request){
-        return (Long) request.getSession().getAttribute("userId");
-    }
+
 }

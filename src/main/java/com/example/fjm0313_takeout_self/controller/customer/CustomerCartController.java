@@ -1,10 +1,10 @@
 package com.example.fjm0313_takeout_self.controller.customer;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.fjm0313_takeout_self.common.LoginRequired;
 import com.example.fjm0313_takeout_self.common.Result;
+import com.example.fjm0313_takeout_self.common.UserContext;
 import com.example.fjm0313_takeout_self.entity.ShoppingCart;
 import com.example.fjm0313_takeout_self.service.ShoppingCartService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -17,12 +17,12 @@ public class CustomerCartController {
     private ShoppingCartService cartService;
 
     // 添加
+    @LoginRequired("CUSTOMER")
     @PostMapping("/add")
-    public Result<ShoppingCart> add(@RequestBody ShoppingCart cart, HttpServletRequest request){
+    public Result<ShoppingCart> add(@RequestBody ShoppingCart cart){
         // 找出用户的订单，找有没有这道菜，有就把数量＋1，没有就新加
-        Long userId = getUserId(request);
+        Long userId = UserContext.getUserId();
         cart.setUserId(userId);
-
         ShoppingCart existCart = cartService.findExistItem(userId,cart.getDishId(),cart.getFlavor(),cart.getPortion());
 
         if(existCart != null){
@@ -36,11 +36,10 @@ public class CustomerCartController {
         }
     }
 
+    @LoginRequired("CUSTOMER")
     @PostMapping("/sub")
-    public Result<ShoppingCart> sub(@RequestBody ShoppingCart cart , HttpServletRequest request){
-        Long userId = getUserId(request);
-        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-
+    public Result<ShoppingCart> sub(@RequestBody ShoppingCart cart){
+        Long userId = UserContext.getUserId();
         ShoppingCart existCart = cartService.findExistItem(userId,cart.getDishId(),cart.getFlavor(),cart.getPortion());
         if(existCart == null){
             return Result.fail("购物单不存在");
@@ -60,25 +59,24 @@ public class CustomerCartController {
 
     }
 
+    @LoginRequired("CUSTOMER")
     @GetMapping("/list")
-    public Result<List<ShoppingCart>> list(HttpServletRequest request){
-        Long userId = getUserId(request);
+    public Result<List<ShoppingCart>> list(){
+        Long userId = UserContext.getUserId();
         List<ShoppingCart> list = cartService.findByUserId(userId);
 
         return Result.success(list);
     }
 
+    @LoginRequired("CUSTOMER")
     @DeleteMapping("/clean")
-    public Result<String> clean(HttpServletRequest request){
-        Long userId = getUserId(request);
-
+    public Result<String> clean(){
+        Long userId = UserContext.getUserId();
         cartService.clearByUserId(userId);
 
         return Result.success("清空成功");
 
     }
 
-    private Long getUserId(HttpServletRequest request){
-        return (Long) request.getSession().getAttribute("userId");
-    }
+    
 }

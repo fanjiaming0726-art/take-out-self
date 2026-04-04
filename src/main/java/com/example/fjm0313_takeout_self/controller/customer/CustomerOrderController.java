@@ -1,11 +1,12 @@
 package com.example.fjm0313_takeout_self.controller.customer;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.fjm0313_takeout_self.common.LoginRequired;
 import com.example.fjm0313_takeout_self.common.Result;
+import com.example.fjm0313_takeout_self.common.UserContext;
 import com.example.fjm0313_takeout_self.vo.OrdersVO;
 import com.example.fjm0313_takeout_self.entity.*;
 import com.example.fjm0313_takeout_self.service.*;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -26,15 +27,18 @@ public class CustomerOrderController {
 
     @Autowired
     private AddressBookService addressService;
+
     @Autowired
     private UserService userService;
+
     @Autowired
     private OrderDetailService orderDetailService;
 
+    @LoginRequired("CUSTOMER")
     @PostMapping("/submit")
-    public Result<Orders> submit(@RequestBody Orders orders, HttpServletRequest request){
+    public Result<Orders> submit(@RequestBody Orders orders){
         // 查有无购物车
-        Long userId = getUserId(request);
+        Long userId = UserContext.getUserId();
         List<ShoppingCart> cartList = cartService.findByUserId(userId);
 
         if(cartList == null || cartList.isEmpty()){
@@ -97,9 +101,10 @@ public class CustomerOrderController {
         return Result.success(orders);
     }
 
+    @LoginRequired("CUSTOMER")
     @GetMapping("/userOrderList")
-    public Result<List<OrdersVO>> userOrdersList(HttpServletRequest request){
-        Long userId = getUserId(request);
+    public Result<List<OrdersVO>> userOrdersList(){
+        Long userId = UserContext.getUserId();
 
         List<Orders> ordersList = ordersService.findByUserId(userId);
         List<OrdersVO> ordersVOList = ordersList.stream().map(order -> {
@@ -114,8 +119,6 @@ public class CustomerOrderController {
     }
 
 
-    private Long getUserId(HttpServletRequest request){
-        return (Long) request.getSession().getAttribute("userId");
-    }
+    
 
 }
