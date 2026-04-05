@@ -4,9 +4,13 @@ import com.example.fjm0313_takeout_self.entity.Dish;
 import com.example.fjm0313_takeout_self.mapper.DishMapper;
 import com.example.fjm0313_takeout_self.service.DishService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.cache.CacheProperties;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class DishServiceImpl implements DishService {
@@ -14,20 +18,33 @@ public class DishServiceImpl implements DishService {
     @Autowired
     private DishMapper dishMapper;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    private final static String DISH_LIST_KEY = "dish:list";
 
     @Override
     public void addDish(Dish dish) {
         dishMapper.insert(dish);
+        redisTemplate.delete(DISH_LIST_KEY);
     }
 
     @Override
     public void deleteDishByIds(List<Long> ids) {
         dishMapper.deleteBatchIds(ids);
+        redisTemplate.delete(DISH_LIST_KEY);
     }
 
     @Override
-    public List<Dish> findAll() {
-        return dishMapper.selectList(null);
+    @SuppressWarnings("unchecked")
+    public List<Dish> findAll(){
+        List<Dish> list = (List<Dish>) redisTemplate.opsForValue().get(DISH_LIST_KEY);
+        if(list != null){
+            return list;
+        }
+        list = dishMapper.selectList(null);
+        redisTemplate.opsForValue().set(DISH_LIST_KEY,list,30, TimeUnit.MINUTES);
+        return list;
     }
 
     @Override
@@ -38,6 +55,7 @@ public class DishServiceImpl implements DishService {
     @Override
     public void updateDish(Dish dish) {
         dishMapper.updateById(dish);
+        redisTemplate.delete(DISH_LIST_KEY);
     }
 
     @Override
@@ -61,8 +79,9 @@ public class DishServiceImpl implements DishService {
 
             rows = dishMapper.deductStock(dishId,count,dish.getVersion());
             if(rows == 0){
-                throw new RuntimeException(dish.getName() + "库存不足，剩余：" + dish.getStock());
+                throw new RuntimeException("系统繁忙，请稍后再试");
             }
         }
+        redisTemplate.delete(DISH_LIST_KEY);
     }
 }
