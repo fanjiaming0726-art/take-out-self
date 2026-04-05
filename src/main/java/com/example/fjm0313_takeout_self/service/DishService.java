@@ -10,4 +10,5 @@ public interface DishService {
     List<Dish> findAll();
     Dish findById(Long id);
     void updateDish(Dish dish);
+    void deductStock(Long dishId, int count);
 }

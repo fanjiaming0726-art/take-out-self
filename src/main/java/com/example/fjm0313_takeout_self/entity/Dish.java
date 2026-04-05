@@ -29,6 +29,10 @@ public class Dish implements Serializable {
 
     private Integer status;
 
+    private Integer stock;
+
+    private Integer version;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 

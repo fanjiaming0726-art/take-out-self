@@ -39,4 +39,30 @@ public class DishServiceImpl implements DishService {
     public void updateDish(Dish dish) {
         dishMapper.updateById(dish);
     }
+
+    @Override
+    public void deductStock(Long dishId, int count) {
+        Dish dish = dishMapper.selectById(dishId);
+        if(dish == null){
+            throw new RuntimeException("菜品不存在");
+        }
+        if(dish.getStock() < count){
+            throw new RuntimeException(dish.getName() + "库存不足，剩余：" + dish.getStock());
+        }
+
+        int rows = dishMapper.deductStock(dishId,count,dish.getVersion());
+
+        if(rows == 0){
+            dish = dishMapper.selectById(dishId);
+
+            if(dish.getStock() < count){
+                throw new RuntimeException(dish.getName() + "库存不足，剩余：" + dish.getStock());
+            }
+
+            rows = dishMapper.deductStock(dishId,count,dish.getVersion());
+            if(rows == 0){
+                throw new RuntimeException(dish.getName() + "库存不足，剩余：" + dish.getStock());
+            }
+        }
+    }
 }

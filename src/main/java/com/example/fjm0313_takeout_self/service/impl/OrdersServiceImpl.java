@@ -3,6 +3,7 @@ package com.example.fjm0313_takeout_self.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.fjm0313_takeout_self.entity.*;
 import com.example.fjm0313_takeout_self.mapper.*;
+import com.example.fjm0313_takeout_self.service.DishService;
 import com.example.fjm0313_takeout_self.service.OrdersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,10 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Autowired
     private UserMapper userMapper;
-
+    @Autowired
+    private DishMapper dishMapper;
+    @Autowired
+    private DishService dishService;
 
 
     @Override
@@ -75,6 +79,10 @@ public class OrdersServiceImpl implements OrdersService {
 
         // 3. 查用户
         User user = userMapper.selectById(userId);
+
+        for(ShoppingCart cart : cartList){
+            dishService.deductStock(cart.getDishId(),cart.getNumber());
+        }
 
         // 4. 计算总金额
         BigDecimal amountAll = BigDecimal.ZERO;
