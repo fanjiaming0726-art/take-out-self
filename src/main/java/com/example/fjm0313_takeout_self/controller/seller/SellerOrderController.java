@@ -1,6 +1,6 @@
 package com.example.fjm0313_takeout_self.controller.seller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.fjm0313_takeout_self.common.LoginRequired;
 import com.example.fjm0313_takeout_self.common.Result;
 import com.example.fjm0313_takeout_self.vo.OrdersVO;
 import com.example.fjm0313_takeout_self.entity.OrderDetail;
@@ -9,10 +9,7 @@ import com.example.fjm0313_takeout_self.service.OrderDetailService;
 import com.example.fjm0313_takeout_self.service.OrdersService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -22,6 +19,7 @@ public class SellerOrderController {
 
     @Autowired
     private OrdersService ordersService;
+
     @Autowired
     private OrderDetailService orderDetailService;
 
@@ -41,5 +39,52 @@ public class SellerOrderController {
 
         return Result.success(voList);
 
+    }
+    // 接单
+    @LoginRequired("EMPLOYEE")
+    @PutMapping("/accept/{id}")
+    public Result<String> accept(@PathVariable Long id) {
+        try {
+            ordersService.updateStatus(id, 2);
+            return Result.success("已接单");
+        } catch (RuntimeException e) {
+            return Result.fail(e.getMessage());
+        }
+    }
+
+    // 配送
+    @LoginRequired("EMPLOYEE")
+    @PutMapping("/deliver/{id}")
+    public Result<String> deliver(@PathVariable Long id) {
+        try {
+            ordersService.updateStatus(id, 3);
+            return Result.success("配送中");
+        } catch (RuntimeException e) {
+            return Result.fail(e.getMessage());
+        }
+    }
+
+    // 完成
+    @LoginRequired("EMPLOYEE")
+    @PutMapping("/complete/{id}")
+    public Result<String> complete(@PathVariable Long id) {
+        try {
+            ordersService.updateStatus(id, 4);
+            return Result.success("已完成");
+        } catch (RuntimeException e) {
+            return Result.fail(e.getMessage());
+        }
+    }
+
+    // 取消
+    @LoginRequired("EMPLOYEE")
+    @PutMapping("/cancel/{id}")
+    public Result<String> cancel(@PathVariable Long id) {
+        try {
+            ordersService.updateStatus(id, 5);
+            return Result.success("已取消");
+        } catch (RuntimeException e) {
+            return Result.fail(e.getMessage());
+        }
     }
 }

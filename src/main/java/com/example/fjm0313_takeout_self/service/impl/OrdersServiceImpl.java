@@ -1,19 +1,35 @@
 package com.example.fjm0313_takeout_self.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.fjm0313_takeout_self.entity.Orders;
-import com.example.fjm0313_takeout_self.mapper.OrdersMapper;
+import com.example.fjm0313_takeout_self.entity.*;
+import com.example.fjm0313_takeout_self.mapper.*;
 import com.example.fjm0313_takeout_self.service.OrdersService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrdersServiceImpl implements OrdersService {
 
     @Autowired
     private OrdersMapper ordersMapper;
+
+    @Autowired
+    private OrderDetailMapper orderDetailMapper;
+
+    @Autowired
+    private ShoppingCartMapper cartMapper;
+
+    @Autowired
+    private AddressBookMapper addressBookMapper;
+
+    @Autowired
+    private UserMapper userMapper;
+
 
 
     @Override
@@ -37,5 +53,83 @@ public class OrdersServiceImpl implements OrdersService {
         }
         wrapper.orderByDesc(Orders::getCreateTime);
         return ordersMapper.selectList(wrapper);
+    }
+
+    @Override
+    @Transactional
+    public Orders submitOrder(Long userId, Long addressBookId, String remark) {
+        // 1. 查购物车
+        LambdaQueryWrapper<ShoppingCart> cartWrapper = new LambdaQueryWrapper<>();
+        cartWrapper.eq(ShoppingCart::getUserId, userId);
+        List<ShoppingCart> cartList = cartMapper.selectList(cartWrapper);
+
+        if (cartList == null || cartList.isEmpty()) {
+            throw new RuntimeException("购物车为空，无法下单");
+        }
+
+        // 2. 查地址
+        AddressBook addressBook = addressBookMapper.selectById(addressBookId);
+        if (addressBook == null) {
+            throw new RuntimeException("地址信息有误，请重新填写");
+        }
+
+        // 3. 查用户
+        User user = userMapper.selectById(userId);
+
+        // 4. 计算总金额
+        BigDecimal amountAll = BigDecimal.ZERO;
+        for (ShoppingCart cart : cartList) {
+            amountAll = amountAll.add(cart.getAmount().multiply(new BigDecimal(cart.getNumber())));
+        }
+
+        // 5. 构建订单
+        Orders orders = new Orders();
+        orders.setNumber(UUID.randomUUID().toString().replace("-", ""));
+        orders.setStatus(1);  // 待接单
+        orders.setUserId(userId);
+        orders.setUsername(user.getUsername());
+        orders.setConsignee(addressBook.getConsignee());
+        orders.setPhone(addressBook.getPhone());
+        orders.setAmount(amountAll);
+        orders.setRemark(remark);
+
+        String fullAddress = (addressBook.getProvinceName() == null ? "" : addressBook.getProvinceName())
+                + (addressBook.getCityName() == null ? "" : addressBook.getCityName())
+                + (addressBook.getDistrictName() == null ? "" : addressBook.getDistrictName())
+                + (addressBook.getDetail() == null ? "" : addressBook.getDetail());
+        orders.setAddress(fullAddress);
+
+        ordersMapper.insert(orders);
+
+        // 6. 保存订单明细
+        for (ShoppingCart cart : cartList) {
+            OrderDetail detail = new OrderDetail();
+            detail.setOrderId(orders.getId());
+            detail.setName(cart.getName());
+            detail.setImage(cart.getImage());
+            detail.setDishId(cart.getDishId());
+            detail.setNumber(cart.getNumber());
+            detail.setAmount(cart.getAmount());
+            detail.setFlavor(cart.getFlavor());
+            detail.setPortion(cart.getPortion());
+            orderDetailMapper.insert(detail);
+        }
+
+
+
+        // 7. 清空购物车
+        cartMapper.delete(cartWrapper);
+
+        return orders;
+    }
+
+    @Override
+    public void updateStatus(Long orderId, Integer status) {
+        Orders orders = ordersMapper.selectById(orderId);
+        if (orders == null) {
+            throw new RuntimeException("订单不存在");
+        }
+        orders.setStatus(status);
+        ordersMapper.updateById(orders);
     }
 }

@@ -9,4 +9,6 @@ public interface OrdersService {
     void createOrder(Orders orders);
     List<Orders> findByUserId(Long userId);
     List<Orders> findAll(Integer status);
+    Orders submitOrder(Long userId,Long addressBookId,String remark);
+    void updateStatus(Long orderId, Integer status);
 }
