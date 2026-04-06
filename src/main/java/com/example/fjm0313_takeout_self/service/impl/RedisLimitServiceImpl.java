@@ -17,11 +17,22 @@ public class RedisLimitServiceImpl implements RedisLimitService {
     public boolean isAllowed(Long userId, int maxRequest, int windowSeconds) {
         String key = "rate:limit" +userId;
 
-        Long count = redisTemplate.opsForValue().increment(key);
-        if(count == 1){
-            redisTemplate.expire(key,windowSeconds, TimeUnit.SECONDS);
+        long now = System.currentTimeMillis();
+        long windowStart = now - windowSeconds * 1000L;
+
+        redisTemplate.opsForZSet().removeRangeByScore(key,0,windowStart);
+
+        Long count = redisTemplate.opsForZSet().zCard(key);
+
+        if(count != null && count >= maxRequest){
+            return false;
         }
 
-        return count <= maxRequest;
+        redisTemplate.opsForZSet().add(key,String.valueOf(now),now);
+
+        redisTemplate.expire(key,windowSeconds,TimeUnit.SECONDS);
+
+        return true;
+
     }
 }
