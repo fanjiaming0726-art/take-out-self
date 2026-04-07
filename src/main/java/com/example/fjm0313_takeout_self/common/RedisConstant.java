@@ -5,5 +5,6 @@ public class RedisConstant {
     public final static int WINDOW_SECONDS = 1;
     public final static String BLACKLIST_KEY = "user:blacklist";
     public final static String BLACKLIST_REASON_EY = "user:blacklist:reason:";
+    public final static String RANKING_KEY = "dish:sales:ranking";
 
 }

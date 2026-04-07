@@ -5,6 +5,7 @@ import com.example.fjm0313_takeout_self.entity.*;
 import com.example.fjm0313_takeout_self.mapper.*;
 import com.example.fjm0313_takeout_self.service.DishService;
 import com.example.fjm0313_takeout_self.service.OrdersService;
+import com.example.fjm0313_takeout_self.service.RankingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,10 +31,12 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Autowired
     private UserMapper userMapper;
-    @Autowired
-    private DishMapper dishMapper;
+
     @Autowired
     private DishService dishService;
+
+    @Autowired
+    private RankingService rankingService;
 
 
     @Override
@@ -123,6 +126,9 @@ public class OrdersServiceImpl implements OrdersService {
             orderDetailMapper.insert(detail);
         }
 
+        for(ShoppingCart cart : cartList){
+            rankingService.increase(cart.getDishId(),cart.getName(),cart.getNumber());
+        }
 
 
         // 7. 清空购物车
