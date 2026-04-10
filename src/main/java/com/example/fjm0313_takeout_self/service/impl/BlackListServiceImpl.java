@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-import static com.example.fjm0313_takeout_self.common.RedisConstant.BLACKLIST_KEY;
-import static com.example.fjm0313_takeout_self.common.RedisConstant.BLACKLIST_REASON_EY;
+import static com.example.fjm0313_takeout_self.common.RedisConstant.*;
 
 @Service
 public class BlackListServiceImpl implements BlackListService {
@@ -19,13 +18,13 @@ public class BlackListServiceImpl implements BlackListService {
     @Override
     public void addToBlackList(Long userId, String reason) {
         redisTemplate.opsForSet().add(BLACKLIST_KEY,userId.toString());
-        redisTemplate.opsForValue().set(BLACKLIST_REASON_EY + userId,reason);
+        redisTemplate.opsForValue().set(BLACKLIST_REASON_KEY + userId,reason);
     }
 
     @Override
     public void removeFromBlacklist(Long userId) {
         redisTemplate.opsForSet().remove(BLACKLIST_KEY,userId.toString());
-        redisTemplate.delete(BLACKLIST_REASON_EY + userId);
+        redisTemplate.delete(BLACKLIST_REASON_KEY + userId);
     }
 
     @Override
