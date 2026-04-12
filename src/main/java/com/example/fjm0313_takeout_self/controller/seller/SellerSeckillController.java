@@ -4,13 +4,10 @@ import com.example.fjm0313_takeout_self.common.LoginRequired;
 import com.example.fjm0313_takeout_self.common.Result;
 import com.example.fjm0313_takeout_self.entity.SeckillActivity;
 import com.example.fjm0313_takeout_self.service.SeckillService;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Watchable;
 import java.util.List;
 
 @RestController
@@ -30,9 +27,25 @@ public class SellerSeckillController {
     @LoginRequired("EMPLOYEE")
     @PostMapping("/rush/{activityId}")
     public Result<String> load(@PathVariable Long activityId){
-        seckillService.loadActivityToRedis(activityId);
-        return Result.success("该菜品已加载到秒杀活动");
+        try {
+            seckillService.loadActivityToRedis(activityId);
+            return Result.success("该菜品已加载到秒杀活动");
+        }catch (Exception e){
+            return Result.fail(e.getMessage());
+        }
     }
+
+    @LoginRequired("EMPLOYEE")
+    @PostMapping("?create")
+    public Result<String> create(@RequestBody SeckillActivity activity){
+        try {
+            seckillService.createActivity(activity);
+            return Result.success("秒杀活动创建成功");
+        }catch (Exception e){
+            return Result.fail(e.getMessage());
+        }
+    }
+
 
 
 

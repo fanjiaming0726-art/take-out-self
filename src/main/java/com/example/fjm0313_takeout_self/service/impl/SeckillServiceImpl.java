@@ -1,7 +1,8 @@
 package com.example.fjm0313_takeout_self.service.impl;
 
 import com.example.fjm0313_takeout_self.entity.SeckillActivity;
-import com.example.fjm0313_takeout_self.mapper.SeckillMapper;
+import com.example.fjm0313_takeout_self.mapper.SeckillActivityMapper;
+import com.example.fjm0313_takeout_self.service.DishService;
 import com.example.fjm0313_takeout_self.service.SeckillService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,14 @@ public class SeckillServiceImpl implements SeckillService {
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
-    private SeckillMapper seckillMapper;
+    private SeckillActivityMapper seckillActivityMapper;
+
+    @Autowired
+    private DishService dishService;
 
     private DefaultRedisScript<Long> seckillScript;
+
+
 
     @PostConstruct
     public void init(){
@@ -40,7 +46,7 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Override
     public void loadActivityToRedis(Long activityId) {
-        SeckillActivity activity = seckillMapper.selectById(activityId);
+        SeckillActivity activity = seckillActivityMapper.selectById(activityId);
         if(activity == null){
             throw new RuntimeException("秒杀活动不存在");
         }
@@ -65,11 +71,21 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Override
     public List<SeckillActivity> listActivities() {
-        return seckillMapper.selectList(null);
+        return seckillActivityMapper.selectList(null);
     }
 
     @Override
     public SeckillActivity findById(Long activityId) {
-        return seckillMapper.selectById(activityId);
+        return seckillActivityMapper.selectById(activityId);
     }
+
+    @Override
+    public void createActivity(SeckillActivity activity) {
+        dishService.deductStock(activity.getDishId(),activity.getTotalStock());
+
+        activity.setStatus(0);
+        seckillActivityMapper.insert(activity);
+    }
+
+
 }
