@@ -54,6 +54,32 @@ public class CustomerOrderController {
         return Result.success(ordersVOList);
     }
 
+    @LoginRequired("CUSTOMER")
+    @PostMapping("/pay/{orderId}")
+    public Result<String> pay(@PathVariable Long orderId){
+        try {
+            Long userId = UserContext.getUserId();
+            Orders orders = ordersService.findById(orderId);
+            if (orders == null) {
+                return Result.fail("订单不存在");
+            }
+
+            if (!orders.getUserId().equals(userId)) {
+                return Result.fail("无权操作此订单");
+            }
+
+            if (orders.getStatus() != 0) {
+                return Result.fail("订单状态错误，无法支付");
+            }
+
+            ordersService.updateStatus(orderId, 1);
+            return Result.success("订单已支付");
+        }catch (Exception e){
+            return Result.fail(e.getMessage());
+        }
+
+    }
+
 
     
 
