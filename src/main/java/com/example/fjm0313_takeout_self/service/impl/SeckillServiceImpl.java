@@ -85,6 +85,8 @@ public class SeckillServiceImpl implements SeckillService {
 
         activity.setStatus(0);
         seckillActivityMapper.insert(activity);
+
+        loadActivityToRedis(activity.getId());
     }
 
 
