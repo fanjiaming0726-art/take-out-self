@@ -24,7 +24,7 @@ public class SellerSeckillController {
     }
 
     @LoginRequired("EMPLOYEE")
-    @PostMapping("?create")
+    @PostMapping("/create")
     public Result<String> create(@RequestBody SeckillActivity activity){
         try {
             seckillService.createActivity(activity);

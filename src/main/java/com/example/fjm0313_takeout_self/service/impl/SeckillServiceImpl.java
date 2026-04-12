@@ -81,6 +81,7 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Override
     public void createActivity(SeckillActivity activity) {
+
         dishService.deductStock(activity.getDishId(),activity.getTotalStock());
 
         activity.setStatus(0);
