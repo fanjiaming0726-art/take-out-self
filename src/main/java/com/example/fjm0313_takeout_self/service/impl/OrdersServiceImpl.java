@@ -1,6 +1,7 @@
 package com.example.fjm0313_takeout_self.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.fjm0313_takeout_self.common.MQ.sender.OrderTimeoutSender;
 import com.example.fjm0313_takeout_self.entity.*;
 import com.example.fjm0313_takeout_self.mapper.*;
 import com.example.fjm0313_takeout_self.service.DishService;
@@ -37,6 +38,9 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Autowired
     private RankingService rankingService;
+
+    @Autowired
+    private OrderTimeoutSender orderTimeoutSender;
 
 
     @Override
@@ -111,6 +115,8 @@ public class OrdersServiceImpl implements OrdersService {
         orders.setAddress(fullAddress);
 
         ordersMapper.insert(orders);
+
+        orderTimeoutSender.sendOrderTimeoutMessage(orders.getId(),"NORMAL");
 
         // 6. 保存订单明细
         for (ShoppingCart cart : cartList) {

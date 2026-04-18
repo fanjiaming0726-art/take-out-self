@@ -1,6 +1,8 @@
-package com.example.fjm0313_takeout_self.common.MQ;
+package com.example.fjm0313_takeout_self.common.MQ.consumer;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.fjm0313_takeout_self.common.MQ.message.SeckillMessage;
+import com.example.fjm0313_takeout_self.common.MQ.sender.OrderTimeoutSender;
 import com.example.fjm0313_takeout_self.config.RabbitMQConfig;
 import com.example.fjm0313_takeout_self.entity.AddressBook;
 import com.example.fjm0313_takeout_self.entity.SeckillActivity;
@@ -36,8 +38,12 @@ public class SeckillOrderConsumer {
 
     @Autowired
     private UserService userService;
+
     @Autowired
     private RankingService rankingService;
+
+    @Autowired
+    private OrderTimeoutSender orderTimeoutSender;
 
     @RabbitListener(queues = RabbitMQConfig.SECKILL_ORDER_QUEUE)
     @Transactional
@@ -65,7 +71,7 @@ public class SeckillOrderConsumer {
             seckillOrder.setDishName(activity.getDishName());
             seckillOrder.setSeckillPrice(activity.getSeckillPrice());
             seckillOrder.setOrderNumber(UUID.randomUUID().toString().replace("-", ""));
-            seckillOrder.setStatus(1);
+            seckillOrder.setStatus(0);
 
             if (addressBook != null) {
                 seckillOrder.setConsignee(addressBook.getConsignee());
@@ -78,6 +84,8 @@ public class SeckillOrderConsumer {
             }
 
             seckillOrderMapper.insert(seckillOrder);
+
+            orderTimeoutSender.sendOrderTimeoutMessage(seckillOrder.getId(),"SECKILL");
 
             rankingService.increase(activity.getDishId(), activity.getDishName(), 1);
 

@@ -24,6 +24,13 @@ public class DishServiceImpl implements DishService {
     private final static String DISH_LIST_KEY = "dish:list";
 
     @Override
+    public void restoreStock(Long dishId, int count) {
+        dishMapper.restoreStock(dishId,count);
+        redisTemplate.delete(DISH_LIST_KEY);
+
+    }
+
+    @Override
     public void addDish(Dish dish) {
         dishMapper.insert(dish);
         redisTemplate.delete(DISH_LIST_KEY);
